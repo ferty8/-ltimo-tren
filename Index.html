@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ÚLTIMO TREN</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    user-select:none;
+}
+
+body{
+    margin:0;
+    background:#050608;
+    color:#e8e8e8;
+    font-family:"Courier New",monospace;
+    overflow:hidden;
+}
+
+button{
+    font-family:inherit;
+}
+
+.screen{
+    position:fixed;
+    inset:0;
+    display:none;
+}
+
+.screen.active{
+    display:flex;
+}
+
+/* ================= MENU ================= */
+
+#menu{
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    background:
+        radial-gradient(circle at center,#172027 0,#080b0d 45%,#020303 100%);
+}
+
+.menu-box{
+    width:min(720px,92vw);
+    padding:35px;
+    border:1px solid #4c5960;
+    background:rgba(4,7,8,.9);
+    box-shadow:0 0 60px #000;
+}
+
+.logo{
+    font-size:clamp(42px,10vw,90px);
+    letter-spacing:8px;
+    color:#ddd;
+    text-shadow:0 0 20px #fff4;
+    margin-bottom:5px;
+}
+
+.subtitle{
+    color:#87959b;
+    letter-spacing:4px;
+    margin-bottom:35px;
+}
+
+.warning{
+    color:#c5a65b;
+    font-size:13px;
+    line-height:1.7;
+    margin-bottom:28px;
+}
+
+.main-btn{
+    width:100%;
+    padding:17px;
+    margin:7px 0;
+    border:1px solid #68757b;
+    background:#11171a;
+    color:#fff;
+    cursor:pointer;
+    font-size:17px;
+    letter-spacing:2px;
+    transition:.2s;
+}
+
+.main-btn:hover{
+    background:#263238;
+    border-color:#aab5ba;
+}
+
+/* ================= GAME ================= */
+
+#game{
+    flex-direction:column;
+    background:#080b0d;
+}
+
+.hud{
+    height:70px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 18px;
+    background:#0d1113;
+    border-bottom:1px solid #293136;
+    z-index:10;
+}
+
+.hud-title{
+    font-size:20px;
+    letter-spacing:3px;
+}
+
+.hud-stats{
+    display:flex;
+    gap:25px;
+    font-size:13px;
+}
+
+.timer{
+    color:#e6c75b;
+}
+
+.timer.danger{
+    color:#ff5555;
+    animation:blink .5s infinite alternate;
+}
+
+@keyframes blink{
+    from{opacity:1}
+    to{opacity:.45}
+}
+
+.game-area{
+    flex:1;
+    display:flex;
+    min-height:0;
+}
+
+/* MAP */
+
+.map{
+    flex:1;
+    position:relative;
+    overflow:hidden;
+    background:
+        linear-gradient(90deg,transparent 49%,#171c1f 49%,#171c1f 51%,transparent 51%),
+        linear-gradient(0deg,transparent 49%,#171c1f 49%,#171c1f 51%,transparent 51%),
+        #0b0e10;
+}
+
+.map::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background:
+        radial-gradient(circle at center,transparent 25%,rgba(0,0,0,.5) 100%);
+}
+
+.zone{
+    position:absolute;
+    border:1px solid #465057;
+    background:#11171a;
+    color:#9ca8ad;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    cursor:pointer;
+    transition:.2s;
+    z-index:2;
+}
+
+.zone:hover{
+    background:#1b2428;
+    color:#fff;
+    border-color:#9ba7ad;
+}
+
+.zone.locked{
+    color:#5c6569;
+    background:#0b0e10;
+}
+
+.zone.active-zone{
+    border-color:#e0c968;
+    box-shadow:0 0 20px #e0c96833;
+}
+
+#zone-platform{
+    left:5%;
+    top:8%;
+    width:40%;
+    height:32%;
+}
+
+#zone-ticket{
+    right:5%;
+    top:8%;
+    width:40%;
+    height:32%;
+}
+
+#zone-office{
+    left:5%;
+    bottom:8%;
+    width:40%;
+    height:32%;
+}
+
+#zone-tunnel{
+    right:5%;
+    bottom:8%;
+    width:40%;
+    height:32%;
+}
+
+#zone-control{
+    left:37%;
+    top:39%;
+    width:26%;
+    height:22%;
+    background:#151b1e;
+}
+
+/* SIDE PANEL */
+
+.panel{
+    width:320px;
+    background:#0b0f11;
+    border-left:1px solid #293136;
+    display:flex;
+    flex-direction:column;
+    padding:18px;
+    overflow:auto;
+}
+
+.panel h3{
+    margin:0 0 12px;
+    color:#b8c2c6;
+    letter-spacing:2px;
+}
+
+.log{
+    height:150px;
+    overflow:auto;
+    border:1px solid #242c30;
+    padding:10px;
+    font-size:12px;
+    line-height:1.6;
+    color:#7f8b90;
+    margin-bottom:18px;
+}
+
+.inventory{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7px;
+}
+
+.item{
+    border:1px solid #293136;
+    padding:10px 5px;
+    text-align:center;
+    font-size:11px;
+    color:#6d787d;
+}
+
+.item.found{
+    color:#e1e1e1;
+    border-color:#6d777b;
+    background:#151a1c;
+}
+
+.objective{
+    margin-top:auto;
+    border-top:1px solid #293136;
+    padding-top:15px;
+    font-size:12px;
+    color:#a3aaad;
+    line-height:1.6;
+}
+
+/* ================= MODAL ================= */
+
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.78);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+}
+
+.modal.active{
+    display:flex;
+}
+
+.modal-box{
+    width:min(560px,92vw);
+    max-height:85vh;
+    overflow:auto;
+    background:#0d1113;
+    border:1px solid #667278;
+    padding:25px;
+    box-shadow:0 0 50px #000;
+}
+
+.modal-title{
+    font-size:25px;
+    letter-spacing:3px;
+    margin-bottom:15px;
+}
+
+.modal-text{
+    color:#a8b0b3;
+    line-height:1.7;
+    font-size:14px;
+}
+
+.choice{
+    width:100%;
+    padding:13px;
+    margin-top:8px;
+    background:#151b1e;
+    border:1px solid #3d474c;
+    color:#dce1e3;
+    cursor:pointer;
+    text-align:left;
+}
+
+.choice:hover{
+    background:#222b2f;
+}
+
+.code-input{
+    width:100%;
+    padding:15px;
+    margin:15px 0;
+    background:#050708;
+    color:#fff;
+    border:1px solid #59656b;
+    font-family:inherit;
+    font-size:22px;
+    text-align:center;
+    letter-spacing:7px;
+    outline:none;
+}
+
+.small-btn{
+    padding:11px 18px;
+    background:#161c1f;
+    color:#fff;
+    border:1px solid #536067;
+    cursor:pointer;
+}
+
+.small-btn:hover{
+    background:#273136;
+}
+
+.close{
+    float:right;
+    cursor:pointer;
+    color:#7d898e;
+}
+
+/* ================= END ================= */
+
+#ending{
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    background:#030405;
+}
+
+.end-box{
+    width:min(650px,92vw);
+    padding:35px;
+    border:1px solid #485257;
+    background:#0b0e10;
+}
+
+.end-title{
+    font-size:45px;
+    letter-spacing:5px;
+    margin-bottom:15px;
+}
+
+.end-text{
+    color:#929da1;
+    line-height:1.7;
+    margin-bottom:25px;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    border:1px solid #252d31;
+    margin:20px 0;
+}
+
+.stat{
+    padding:15px;
+    border-right:1px solid #252d31;
+}
+
+.stat:last-child{
+    border-right:0;
+}
+
+.stat b{
+    display:block;
+    font-size:23px;
+    color:#ddd;
+    margin-bottom:5px;
+}
+
+.stat span{
+    font-size:10px;
+    color:#737d81;
+}
+
+/* FLASH / EVENTS */
+
+#flash{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    background:#fff;
+    opacity:0;
+    z-index:100;
+}
+
+.shake{
+    animation:shake .25s;
+}
+
+@keyframes shake{
+    0%,100%{transform:translate(0)}
+    25%{transform:translate(-5px,3px)}
+    50%{transform:translate(4px,-3px)}
+    75%{transform:translate(-3px,-2px)}
+}
+
+@media(max-width:800px){
+    .hud{
+        height:58px;
+    }
+
+    .hud-title{
+        font-size:14px;
+    }
+
+    .hud-stats{
+        gap:9px;
+        font-size:10px;
+    }
+
+    .game-area{
+        flex-direction:column;
+    }
+
+    .map{
+        height:62%;
+        flex:none;
+    }
+
+    .panel{
+        width:100%;
+        height:38%;
+        border-left:0;
+        border-top:1px solid #293136;
+        padding:10px;
+    }
+
+    .log{
+        height:65px;
+        margin-bottom:8px;
+    }
+
+    .inventory{
+        grid-template-columns:repeat(4,1fr);
+    }
+
+    .objective{
+        display:none;
+    }
+
+    .end-title{
+        font-size:30px;
+    }
+
+    .stats{
+        grid-template-columns:1fr;
+    }
+
+    .stat{
+        border-right:0;
+        border-bottom:1px solid #252d31;
+    }
+
+    .stat:last-child{
+        border-bottom:0;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================= MENU ================= -->
+
+<section id="menu" class="screen active">
+    <div class="menu-box">
+        <div class="logo">ÚLTIMO TREN</div>
+        <div class="subtitle">ESTACIÓN 17 · 23:50</div>
+
+        <div class="warning">
+            EL ÚLTIMO TREN SALE A LAS 00:00.<br>
+            LA ESTACIÓN ESTÁ CERRADA.<br>
+            ENCUENTRA EL CÓDIGO Y LLEGA AL ANDÉN.
+        </div>
+
+        <button class="main-btn" onclick="startGame()">COMENZAR</button>
+        <button class="main-btn" onclick="showInstructions()">INSTRUCCIONES</button>
+
+        <div style="margin-top:22px;color:#515b60;font-size:10px;">
+            TODA LA PARTIDA ES TEMPORAL · SIN GUARDADO
+        </div>
+    </div>
+</section>
+
+<!-- ================= GAME ================= -->
+
+<section id="game" class="screen">
+
+    <header class="hud">
+        <div class="hud-title">ÚLTIMO TREN</div>
+
+        <div class="hud-stats">
+            <span class="timer" id="timer">10:00</span>
+            <span>PISTAS: <b id="clueCount">0</b>/5</span>
+            <span>ERRORES: <b id="errors">0</b>/3</span>
+        </div>
+    </header>
+
+    <div class="game-area">
+
+        <main class="map">
+
+            <div id="zone-platform"
+                 class="zone"
+                 onclick="enterZone('platform')">
+                ANDÉN<br>PRINCIPAL
+            </div>
+
+            <div id="zone-ticket"
+                 class="zone"
+                 onclick="enterZone('ticket')">
+                TAQUILLAS
+            </div>
+
+            <div id="zone-office"
+                 class="zone"
+                 onclick="enterZone('office')">
+                OFICINAS
+            </div>
+
+            <div id="zone-tunnel"
+                 class="zone"
+                 onclick="enterZone('tunnel')">
+                TÚNEL
+            </div>
+
+            <div id="zone-control"
+                 class="zone"
+                 onclick="enterZone('control')">
+                SALA DE<br>CONTROL
+            </div>
+
+        </main>
+
+        <aside class="panel">
+
+            <h3>REGISTRO</h3>
+
+            <div class="log" id="log"></div>
+
+            <h3>OBJETOS</h3>
+
+            <div class="inventory">
+                <div class="item" id="item-key">🔑<br>LLAVE</div>
+                <div class="item" id="item-note">📄<br>NOTA</div>
+                <div class="item" id="item-ticket">🎫<br>BOLETO</div>
+                <div class="item" id="item-fuse">🔧<br>FUSIBLE</div>
+                <div class="item" id="item-map">🗺️<br>MAPA</div>
+                <div class="item" id="item-code">🔢<br>CÓDIGO</div>
+            </div>
+
+            <div class="objective">
+                <b>OBJETIVO</b><br>
+                Encuentra las pistas necesarias,
+                activa la sala de control y descubre
+                el código que abre el acceso al tren.
+            </div>
+
+        </aside>
+    </div>
+</section>
+
+<!-- ================= MODAL ================= -->
+
+<div class="modal" id="modal">
+    <div class="modal-box">
+        <span class="close" onclick="closeModal()">[ CERRAR ]</span>
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-text" id="modalText"></div>
+        <div id="modalChoices"></div>
+    </div>
+</div>
+
+<!-- ================= END ================= -->
+
+<section id="ending" class="screen">
+
+    <div class="end-box">
+
+        <div class="end-title" id="endTitle"></div>
+
+        <div class="end-text" id="endText"></div>
+
+        <div class="stats">
+            <div class="stat">
+                <b id="finalTime">--</b>
+                <span>TIEMPO</span>
+            </div>
+
+            <div class="stat">
+                <b id="finalClues">--</b>
+                <span>PISTAS</span>
+            </div>
+
+            <div class="stat">
+                <b id="finalErrors">--</b>
+                <span>ERRORES</span>
+            </div>
+        </div>
+
+        <button class="main-btn" onclick="startGame()">
+            NUEVA PARTIDA
+        </button>
+
+        <button class="main-btn" onclick="backToMenu()">
+            MENÚ PRINCIPAL
+        </button>
+
+    </div>
+</section>
+
+<div id="flash"></div>
+
+<script>
+/*
+====================================================
+ÚLTIMO TREN
+SIN GUARDADO PERSISTENTE
+====================================================
+
+Este juego NO utiliza:
+- localStorage
+- sessionStorage
+- cookies
+- IndexedDB
+- bases de datos
+- servidores
+- archivos de guardado
+
+Todo existe únicamente en variables JavaScript.
+Al recargar la página, todo desaparece.
+====================================================
+*/
+
+/* ================= ESTADO ================= */
+
+let game = null;
+
+const TOTAL_TIME = 600;
+
+/*
+Cada partida crea un nuevo estado.
+*/
+
+function newGameState(){
+
+    const finalCode =
+        String(Math.floor(1000 + Math.random() * 9000));
+
+    const order =
+        shuffle(["red","blue","green","yellow"]);
+
+    return {
+
+        timeLeft:TOTAL_TIME,
+
+        clues:0,
+
+        errors:0,
+
+        finalCode:finalCode,
+
+        found:{},
+
+        zones:{},
+
+        active:true,
+
+        startTime:Date.now(),
+
+        sequence:order,
+
+        events:0
+
+    };
+}
+
+/* ================= UTILIDADES ================= */
+
+function $(id){
+    return document.getElementById(id);
+}
+
+function shuffle(array){
+
+    const a=[...array];
+
+    for(let i=a.length-1;i>0;i--){
+
+        const j=Math.floor(Math.random()*(i+1));
+
+        [a[i],a[j]]=[a[j],a[i]];
+    }
+
+    return a;
+}
+
+function log(message){
+
+    const box=$("log");
+
+    const line=document.createElement("div");
+
+    const time=
+        new Date().toLocaleTimeString("es-MX",{
+            hour:"2-digit",
+            minute:"2-digit"
+        });
+
+    line.textContent=
+        `[${time}] ${message}`;
+
+    box.appendChild(line);
+
+    box.scrollTop=box.scrollHeight;
+}
+
+function addClue(){
+
+    if(game.clues<5){
+        game.clues++;
+    }
+
+    $("clueCount").textContent=game.clues;
+}
+
+function findItem(id){
+
+    if(!game.found[id]){
+
+        game.found[id]=true;
+
+        $(id).classList.add("found");
+    }
+}
+
+function flash(){
+
+    const f=$("flash");
+
+    f.style.opacity=".12";
+
+    setTimeout(()=>{
+        f.style.opacity="0";
+    },80);
+}
+
+function shake(){
+
+    $("game").classList.add("shake");
+
+    setTimeout(()=>{
+        $("game").classList.remove("shake");
+    },300);
+}
+
+/* ================= MENU ================= */
+
+function showScreen(id){
+
+    document.querySelectorAll(".screen")
+        .forEach(x=>x.classList.remove("active"));
+
+    $(id).classList.add("active");
+}
+
+function showInstructions(){
+
+    openModal(
+        "INSTRUCCIONES",
+        `
+        <p>
+        Tienes <b>10 minutos</b> para escapar de la estación.
+        </p>
+
+        <p>
+        Explora las diferentes zonas y encuentra las pistas.
+        Algunas acciones requieren objetos encontrados
+        anteriormente.
+        </p>
+
+        <p>
+        Cuando tengas suficiente información,
+        dirígete a la <b>Sala de Control</b>.
+        </p>
+
+        <p>
+        Finalmente tendrás que introducir el código
+        correcto en el andén.
+        </p>
+
+        <p>
+        Si cometes 3 errores de código,
+        perderás la partida.
+        </p>
+        `
+    );
+}
+
+function startGame(){
+
+    game=newGameState();
+
+    $("log").innerHTML="";
+
+    $("clueCount").textContent="0";
+    $("errors").textContent="0";
+
+    document
+        .querySelectorAll(".item")
+        .forEach(x=>x.classList.remove("found"));
+
+    document
+        .querySelectorAll(".zone")
+        .forEach(x=>x.classList.remove("active-zone"));
+
+    showScreen("game");
+
+    log("La estación está vacía.");
+
+    log("El último tren sale en 10 minutos.");
+
+    log("Encuentra una forma de activar el andén.");
+
+    updateTimer();
+
+    if(window.gameTimer){
+        clearInterval(window.gameTimer);
+    }
+
+    window.gameTimer=setInterval(tick,1000);
+
+    scheduleEvent();
+}
+
+function backToMenu(){
+
+    if(window.gameTimer){
+        clearInterval(window.gameTimer);
+    }
+
+    game=null;
+
+    showScreen("menu");
+}
+
+/* ================= TIMER ================= */
+
+function tick(){
+
+    if(!game || !game.active) return;
+
+    game.timeLeft--;
+
+    updateTimer();
+
+    if(game.timeLeft<=0){
+
+        game.active=false;
+
+        clearInterval(window.gameTimer);
+
+        finish(
+            "DEMASIADO TARDE",
+            "El reloj llegó a medianoche. El tren abandonó la estación."
+        );
+    }
+}
+
+function updateTimer(){
+
+    const minutes=
+        Math.floor(game.timeLeft/60);
+
+    const seconds=
+        game.timeLeft%60;
+
+    $("timer").textContent=
+        `${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
+
+    if(game.timeLeft<=90){
+
+        $("timer").classList.add("danger");
+
+    }else{
+
+        $("timer").classList.remove("danger");
+    }
+}
+
+/* ================= EVENTOS ================= */
+
+function scheduleEvent(){
+
+    if(!game || !game.active) return;
+
+    const delay=
+        18000 + Math.random()*30000;
+
+    setTimeout(()=>{
+
+        if(!game || !game.active) return;
+
+        randomEvent();
+
+        scheduleEvent();
+
+    },delay);
+}
+
+function randomEvent(){
+
+    game.events++;
+
+    const events=[
+
+        ()=>{
+            flash();
+            log("Las luces parpadearon.");
+        },
+
+        ()=>{
+            shake();
+            log("Un golpe metálico resonó desde el túnel.");
+        },
+
+        ()=>{
+            log("Una voz por el altavoz: 'Última salida...'");
+        },
+
+        ()=>{
+            document.body.style.filter="brightness(.65)";
+
+            setTimeout(()=>{
+                document.body.style.filter="";
+            },1200);
+
+            log("La iluminación de la estación falló.");
+        },
+
+        ()=>{
+            log("Escuchaste el sonido de un tren a lo lejos.");
+        }
+
+    ];
+
+    events[
+        Math.floor(Math.random()*events.length)
+    ]();
+}
+
+/* ================= ZONAS ================= */
+
+function enterZone(zone){
+
+    if(!game || !game.active) return;
+
+    document
+        .querySelectorAll(".zone")
+        .forEach(x=>x.classList.remove("active-zone"));
+
+    $("zone-"+zone).classList.add("active-zone");
+
+    if(zone==="platform"){
+        platform();
+    }
+
+    if(zone==="ticket"){
+        ticketOffice();
+    }
+
+    if(zone==="office"){
+        office();
+    }
+
+    if(zone==="tunnel"){
+        tunnel();
+    }
+
+    if(zone==="control"){
+        control();
+    }
+}
+
+/* ================= ANDÉN ================= */
+
+function platform(){
+
+    if(!game.found.platformSeen){
+
+        game.found.platformSeen=true;
+
+        openModal(
+            "ANDÉN PRINCIPAL",
+            `
+            <p>
+            El andén está completamente oscuro.
+            </p>
+
+            <p>
+            Hay un panel electrónico junto a la vía.
+            </p>
+
+            <p>
+            La pantalla muestra:
+            <br><br>
+            <b>ACCESO BLOQUEADO</b>
+            </p>
+            `,
+            [
+                {
+                    text:"Examinar panel",
+                    action:inspectPanel
+                },
+                {
+                    text:"Revisar las vías",
+                    action:inspectTracks
+                }
+            ]
+        );
+
+    }else{
+
+        openModal(
+            "ANDÉN",
+            `
+            <p>
+            El tren todavía no ha llegado.
+            </p>
+
+            <p>
+            El panel sigue esperando un código.
+            </p>
+            `,
+            [
+                {
+                    text:"Introducir código",
+                    action:openFinalCode
+                }
+            ]
+        );
+    }
+}
+
+function inspectPanel(){
+
+    openModal(
+        "PANEL",
+        `
+        <p>
+        El panel tiene cuatro botones:
+        </p>
+
+        <p style="font-size:25px;text-align:center;">
+        🔴 🔵 🟢 🟡
+        </p>
+
+        <p>
+        Parece necesitar una secuencia.
+        Falta información.
+        </p>
+        `
+    );
+}
+
+function inspectTracks(){
+
+    addClue();
+
+    openModal(
+        "VÍAS",
+        `
+        <p>
+        Encuentras una pequeña placa metálica.
+        </p>
+
+        <p>
+        Tiene grabado:
+        </p>
+
+        <p style="text-align:center;font-size:22px;">
+        17 — 04 — 23
+        </p>
+
+        <p>
+        Puede ser importante.
+        </p>
+        `
+    );
+
+    log("Encontraste una placa con números.");
+
+}
+
+/* ================= TAQUILLAS ================= */
+
+function ticketOffice(){
+
+    if(!game.found.ticket){
+
+        openModal(
+            "TAQUILLAS",
+            `
+            <p>
+            Hay decenas de taquillas.
+            Casi todas están vacías.
+            </p>
+
+            <p>
+            Una tiene una luz roja encendida.
+            </p>
+            `,
+            [
+                {
+                    text:"Abrir taquilla iluminada",
+                    action:openTicket
+                },
+                {
+                    text:"Buscar alrededor",
+                    action:searchTicket
+                }
+            ]
+        );
+
+    }else{
+
+        openModal(
+            "TAQUILLAS",
+            `
+            <p>
+            Ya revisaste la taquilla.
+            </p>
+
+            <p>
+            Solo queda polvo y papeles viejos.
+            </p>
+            `
+        );
+    }
+}
+
+function openTicket(){
+
+    game.found.ticket=true;
+
+    findItem("item-ticket");
+
+    addClue();
+
+    openModal(
+        "TAQUILLA 17",
+        `
+        <p>
+        Dentro encuentras un boleto antiguo.
+        </p>
+
+        <p style="text-align:center;font-size:18px;">
+        ESTACIÓN 17<br>
+        VAGÓN 04<br>
+        ASIENTO 23
+        </p>
+
+        <p>
+        En la parte trasera hay una flecha apuntando
+        hacia las oficinas.
+        </p>
+        `
+    );
+
+    log("Encontraste un boleto antiguo.");
+}
+
+function searchTicket(){
+
+    openModal(
+        "BÚSQUEDA",
+        `
+        <p>
+        Encuentras un pequeño papel debajo de una taquilla.
+        </p>
+
+        <p>
+        Dice:
+        </p>
+
+        <p style="text-align:center;">
+        "La primera luz siempre miente."
+        </p>
+        `,
+        [
+            {
+                text:"Guardar la nota",
+                action:()=>{
+                    findItem("item-note");
+                    addClue();
+                    log("Guardaste una nota.");
+                    closeModal();
+                }
+            }
+        ]
+    );
+}
+
+/* ================= OFICINA ================= */
+
+function office(){
+
+    if(!game.found.office){
+
+        openModal(
+            "OFICINAS",
+            `
+            <p>
+            Hay escritorios abandonados,
+            archivadores y un mapa de la estación.
+            </p>
+
+            <p>
+            Un archivador está cerrado con llave.
+            </p>
+            `,
+            [
+                {
+                    text:"Buscar una llave",
+                    action:searchKey
+                },
+                {
+                    text:"Examinar el mapa",
+                    action:searchMap
+                }
+            ]
+        );
+
+    }else{
+
+        openModal(
+            "OFICINAS",
+            `
+            <p>
+            Ya registraste las oficinas.
+            </p>
+            `
+        );
+    }
+}
+
+function searchKey(){
+
+    findItem("item-key");
+
+    game.found.office=true;
+
+    addClue();
+
+    openModal(
+        "LLAVE",
+        `
+        <p>
+        Después de revisar los escritorios,
+        encuentras una llave detrás de un calendario.
+        </p>
+
+        <p>
+        En la llave aparece grabado:
+        <b>CONTROL</b>
+        </p>
+        `
+    );
+
+    log("Encontraste una llave de la sala de control.");
+}
+
+function searchMap(){
+
+    findItem("item-map");
+
+    addClue();
+
+    openModal(
+        "MAPA",
+        `
+        <p>
+        El mapa muestra un recorrido de mantenimiento
+        que conecta las oficinas con el túnel.
+        </p>
+
+        <p>
+        Hay una marca:
+        </p>
+
+        <p style="text-align:center;font-size:22px;">
+        M-04
+        </p>
+        `
+    );
+
+    log("Encontraste un mapa de mantenimiento.");
+}
+
+/* ================= TÚNEL ================= */
+
+function tunnel(){
+
+    if(!game.found.tunnel){
+
+        openModal(
+            "TÚNEL",
+            `
+            <p>
+            El túnel está casi completamente oscuro.
+            </p>
+
+            <p>
+            Hay una caja eléctrica junto a la pared.
+            </p>
+            `,
+            [
+                {
+                    text:"Revisar caja eléctrica",
+                    action:electricalBox
+                },
+                {
+                    text:"Avanzar por el túnel",
+                    action:walkTunnel
+                }
+            ]
+        );
+
+    }else{
+
+        openModal(
+            "TÚNEL",
+            `
+            <p>
+            El túnel está vacío.
+            </p>
+            `
+        );
+    }
+}
+
+function electricalBox(){
+
+    findItem("item-fuse");
+
+    addClue();
+
+    game.found.tunnel=true;
+
+    openModal(
+        "CAJA ELÉCTRICA",
+        `
+        <p>
+        Falta un fusible.
+        Por suerte encuentras uno de repuesto
+        en un compartimento lateral.
+        </p>
+
+        <p>
+        También hay una etiqueta:
+        </p>
+
+        <p style="text-align:center;font-size:20px;">
+        CONTROL → FUSIBLE → PANEL
+        </p>
+        `
+    );
+
+    log("Encontraste un fusible.");
+}
+
+function walkTunnel(){
+
+    openModal(
+        "TÚNEL",
+        `
+        <p>
+        Avanzas unos metros.
+        </p>
+
+        <p>
+        Escuchas un ruido detrás de ti.
+        </p>
+
+        <p>
+        Cuando te giras, no hay nadie.
+        </p>
+        `,
+        [
+            {
+                text:"Regresar",
+                action:closeModal
+            }
+        ]
+    );
+
+    shake();
+    log("Algo se movió en el túnel.");
+}
+
+/* ================= CONTROL ================= */
+
+function control(){
+
+    if(!game.found.key){
+
+        openModal(
+            "SALA DE CONTROL",
+            `
+            <p>
+            La puerta está cerrada.
+            </p>
+
+            <p>
+            Hay una cerradura que dice:
+            </p>
+
+            <p style="text-align:center;">
+            PERSONAL AUTORIZADO
+            </p>
+            `
+        );
+
+        return;
+    }
+
+    if(!game.found.control){
+
+        openModal(
+            "SALA DE CONTROL",
+            `
+            <p>
+            La llave funciona.
+            </p>
+
+            <p>
+            Dentro encuentras un panel eléctrico
+            y una consola antigua.
+            </p>
+            `,
+            [
+                {
+                    text:"Instalar fusible",
+                    action:installFuse
+                },
+                {
+                    text:"Revisar consola",
+                    action:consoleInfo
+                }
+            ]
+        );
+
+    }else{
+
+        openControlPanel();
+    }
+}
+
+function installFuse(){
+
+    if(!game.found.fuse){
+
+        openModal(
+            "PANEL ELÉCTRICO",
+            `
+            <p>
+            Falta el fusible.
+            </p>
+            `
+        );
+
+        return;
+    }
+
+    game.found.control=true;
+
+    addClue();
+
+    openModal(
+        "ENERGÍA RESTAURADA",
+        `
+        <p>
+        Instalas el fusible.
+        </p>
+
+        <p>
+        Las luces de la estación vuelven a encenderse.
+        </p>
+
+        <p>
+        La consola muestra:
+        </p>
+
+        <p style="text-align:center;font-size:24px;">
+        SISTEMA ACTIVO
+        </p>
+        `,
+        [
+            {
+                text:"Examinar consola",
+                action:openControlPanel
+            }
+        ]
+    );
+
+    flash();
+
+    log("La energía de la estación fue restaurada.");
+}
+
+function consoleInfo(){
+
+    openModal(
+        "CONSOLA",
+        `
+        <p>
+        La consola no responde.
+        </p>
+
+        <p>
+        Parece necesitar energía.
+        </p>
+        `
+    );
+}
+
+function openControlPanel(){
+
+    openModal(
+        "CONSOLA CENTRAL",
+        `
+        <p>
+        El sistema está activo.
+        </p>
+
+        <p>
+        Para generar el código del tren debes
+        introducir la secuencia de luces encontrada
+        en la estación.
+        </p>
+
+        <p>
+        La pantalla muestra cuatro colores.
+        </p>
+
+        <div style="
+            display:flex;
+            gap:10px;
+            justify-content:center;
+            margin:20px 0;
+            font-size:30px;
+        ">
+            🔴 🔵 🟢 🟡
+        </div>
+        `,
+        [
+            {
+                text:"Descifrar secuencia",
+                action:decodeSequence
+            }
+        ]
+    );
+}
+
+function decodeSequence(){
+
+    findItem("item-code");
+
+    addClue();
+
+    const names={
+        red:"ROJO",
+        blue:"AZUL",
+        green:"VERDE",
+        yellow:"AMARILLO"
+    };
+
+    const sequence=
+        game.sequence
+        .map(x=>names[x])
+        .join(" → ");
+
+    openModal(
+        "SECUENCIA DESCUBIERTA",
+        `
+        <p>
+        La consola revela la secuencia correcta:
+        </p>
+
+        <p style="
+            text-align:center;
+            font-size:19px;
+            color:#ddd;
+        ">
+        ${sequence}
+        </p>
+
+        <p>
+        Debajo aparece un mensaje:
+        </p>
+
+        <p style="text-align:center;">
+        "La secuencia abre el sistema.<br>
+        El código final espera en el andén."
+        </p>
+        `,
+        [
+            {
+                text:"Ir al andén",
+                action:()=>{
+                    closeModal();
+                    log("Ya puedes intentar activar el tren.");
+                }
+            }
+        ]
+    );
+
+    log("Descubriste la secuencia del panel.");
+}
+
+/* ================= CÓDIGO FINAL ================= */
+
+function openFinalCode(){
+
+    if(game.clues<4){
+
+        openModal(
+            "PANEL BLOQUEADO",
+            `
+            <p>
+            El sistema todavía no tiene suficiente información.
+            </p>
+
+            <p>
+            Necesitas investigar más zonas de la estación.
+            </p>
+            `
+        );
+
+        return;
+    }
+
+    openModal(
+        "CÓDIGO DEL TREN",
+        `
+        <p>
+        Introduce el código de cuatro cifras.
+        </p>
+
+        <input
+            id="codeInput"
+            class="code-input"
+            maxlength="4"
+            inputmode="numeric"
+            placeholder="0000"
+        >
+
+        <button
+            class="main-btn"
+            onclick="checkCode()">
+            ACTIVAR TREN
+        </button>
+
+        <p style="font-size:11px;color:#687378;">
+        Tienes tres intentos.
+        </p>
+        `
+    );
+
+    setTimeout(()=>{
+        const input=$("codeInput");
+
+        if(input){
+            input.focus();
+        }
+    },100);
+}
+
+function checkCode(){
+
+    const input=$("codeInput");
+
+    if(!input) return;
+
+    const value=input.value.trim();
+
+    if(value===game.finalCode){
+
+        closeModal();
+
+        game.active=false;
+
+        clearInterval(window.gameTimer);
+
+        finish(
+            "ESCAPASTE",
+            "El panel se iluminó. Las puertas se abrieron y el último tren llegó a la estación. Subiste justo a tiempo."
+        );
+
+        return;
+    }
+
+    game.errors++;
+
+    $("errors").textContent=game.errors;
+
+    shake();
+
+    if(game.errors>=3){
+
+        closeModal();
+
+        game.active=false;
+
+        clearInterval(window.gameTimer);
+
+        finish(
+            "SISTEMA BLOQUEADO",
+            "Introdujiste demasiados códigos incorrectos. El sistema de seguridad bloqueó el acceso al tren."
+        );
+
+        return;
+    }
+
+    openModal(
+        "CÓDIGO INCORRECTO",
+        `
+        <p>
+        El código no funciona.
+        </p>
+
+        <p>
+        El sistema permite
+        <b>${3-game.errors}</b> intento(s) más.
+        </p>
+        `,
+        [
+            {
+                text:"Intentar otra vez",
+                action:openFinalCode
+            }
+        ]
+    );
+
+    log("Código incorrecto.");
+}
+
+/* ================= MODAL ================= */
+
+function openModal(title,text,choices=[]){
+
+    $("modalTitle").textContent=title;
+
+    $("modalText").innerHTML=text;
+
+    const box=$("modalChoices");
+
+    box.innerHTML="";
+
+    choices.forEach(choice=>{
+
+        const btn=document.createElement("button");
+
+        btn.className="choice";
+
+        btn.textContent=choice.text;
+
+        btn.onclick=choice.action;
+
+        box.appendChild(btn);
+    });
+
+    $("modal").classList.add("active");
+}
+
+function closeModal(){
+
+    $("modal").classList.remove("active");
+}
+
+/* ================= FINAL ================= */
+
+function finish(title,text){
+
+    $("endTitle").textContent=title;
+
+    $("endText").textContent=text;
+
+    const elapsed=
+        TOTAL_TIME-game.timeLeft;
+
+    const minutes=
+        Math.floor(elapsed/60);
+
+    const seconds=
+        elapsed%60;
+
+    $("finalTime").textContent=
+        `${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
+
+    $("finalClues").textContent=
+        game.clues;
+
+    $("finalErrors").textContent=
+        game.errors;
+
+    showScreen("ending");
+}
+
+/* ================= TECLADO ================= */
+
+document.addEventListener("keydown",event=>{
+
+    if(event.key==="Escape"){
+
+        if($("modal").classList.contains("active")){
+            closeModal();
+        }
+    }
+
+    if(event.key==="Enter"){
+
+        const input=$("codeInput");
+
+        if(input &&
+           $("modal").classList.contains("active")){
+
+            checkCode();
+        }
+    }
+});
+
+/* ================= INICIO ================= */
+
+/*
+No se crea ninguna partida hasta pulsar COMENZAR.
+*/
+
+</script>
+
+</body>
+</html>
